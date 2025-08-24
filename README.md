@@ -53,31 +53,65 @@ yarn build
 
 ### Интерфейсы:
 
-#### Интерфейс данных пользователя
+#### Интерфейс данных заказа
 
 ```
 interface IOrder {
-  address: string;
-	email: string;
-	phone: string;
-	payment: TPaymentОptions;
+	address: string; // адрес
+	email: string; // почта
+	phone: string; // телефон
+	payment: TPaymentОptions; // способы оплаты
+	items: string[]; // массив id товаров
+	total: number; // общая сумма заказа
 }
 ```
 
 #### Интерфейс данных карточки
 
 ```
-interface ICard{
-  id: string;
-	description: string;
-	image: string;
-	title: string;
-	category: TCategoryList;
-	price: number | null;
+interface ICard {
+	id: string; // id товара
+	description: string; // описание
+	image: string; // url картинки
+	title: string; // название
+	category: TCategoryList; // категории товара
+	price: number | null; // цена товара
 }
 ```
 
-#### Интерфейс для модели данных карточек
+#### Интерфейс данных для модального окна
+```
+interface IModalViewData {
+  content: HTMLElement;    // контент модального окна
+  isOpen: boolean;  // открыто/закрыто модальное окно
+}
+```
+
+#### Интерфейс данных для предпросмотра карточки
+
+```
+interface ICardPreviewData extends TModalCardInfo {
+  inCart: boolean; // наличие товара в корзине
+}
+```
+
+#### Интерфейс данных для отображения карточки
+
+```
+interface CardViewData extends ICard {
+  inCart: boolean; // наличие товара в корзине
+}
+```
+
+#### Интерфейс данных корзины
+
+```
+interface ICart {
+  cards: ICard[];
+}
+```
+
+#### Интерфейс для данных карточек
 
 ```
 interface ICardsList {
@@ -86,11 +120,12 @@ interface ICardsList {
 }
 ```
 
-#### Интерфейс данных корзины
+#### Интерфейс данных для отображения корзины
 
 ```
-interface ICart {
-	cards: ICardData[];
+interface ICartModalViewData {
+  items: ICard[];      // массив товаров в корзине
+  totalPrice: number;  // общая стоимость
 }
 ```
 
@@ -113,13 +148,13 @@ type TCategoryList =
 type TPaymentОptions = 'card' | 'cash' | null;
 ```
 
-#### Тип данных для отображения информации товара на главной странице
+#### Тип данных для для информации товара на главной странице
 
 ```
 type TMainCardInfo = Pick<ICard, 'category' | 'title' | 'image' | 'price'>;
 ```
 
-#### Тип данных для отображения информации в модальном окне товара
+#### Тип данных для информации в модальном окне товара
 
 ```
 type TModalCardInfo = Pick<
@@ -128,19 +163,19 @@ type TModalCardInfo = Pick<
 >;
 ```
 
-#### Тип данных для отображения информации товаров в корзине
+#### Тип данных для информации товаров в корзине
 
 ```
 type TCartCardInfo = Pick<ICard, 'id' | 'title' | 'price'>;
 ```
 
-#### Тип данных для модального окна с выбором способа оплаты
+#### Тип данных для модального окна с выбором оплаты
 
 ```
 type TModalPayment = Pick<IOrder, 'payment' | 'address'>;
 ```
 
-#### Тип данных для модального окна с контактами
+#### Тип данных для модального окно с контактами
 
 ```
 type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
@@ -150,8 +185,8 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 Код приложения разделен на слои согласно парадигме MVP:
 
-- слой представления, отвечает за отображение данных на странице,
-- слой данных, отвечает за хранение и изменение данных
+- слой представления, отвечает за отображение данных на странице.
+- слой данных, отвечает за хранение и изменение данных.
 - презентер, отвечает за связь представления и данных.
 
 ### Базовый код
@@ -169,28 +204,33 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 Брокер событий позволяет отправлять события и подписываться на события, происходящие в системе. Класс используется в презентере для обработки событий и в слоях приложения для генерации событий.  
 Основные методы, реализуемые классом описаны интерфейсом `IEvents`:
 
-- `on` - подписка на событие
-- `emit` - инициализация события
-- `trigger` - возвращает функцию, при вызове которой инициализируется требуемое в параметрах событие
+- `on` - подписка на событие.
+- `emit` - инициализация события.
+- `trigger` - возвращает функцию, при вызове которой инициализируется требуемое в параметрах событие.
 
 ### Слой данных
 
 #### Класс OrderData
 
+Класс отвечает за хранение и логику работы с данными заказа.
+
 ##### Поля:
 
-- `address: string` - адрес.
-- `email: string` - почта.
-- `phone: string` - номер телефона.
-- `payment: TPaymentОptions` - способы оплаты.
+- `_data: Partial<IOrder>` - Поле для хранения данных заказа.
 - `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
 
 ##### Методы:
 
-- `setOrderInfo(info: IOrder)` - сохраняет введенные данные заказа
+- `setItems(items:string[])` - сохраняет список товаров.
+- `setPayment(payment:TPaymentOptions):void` - сохраняет данные способа оплаты.
+- `setAddress(address:string):void` - сохраняет данные поля адреса.
+- `setEmail(email:string):void` - сохраняет данные поля почты.
+- `setPhone(phone:string):void` - сохраняет данные поля телефона.
+- `setTotalPrice(total:number):void` - сохраняет общую стоимость.
 - `validationPaymentData(data: Record<keyof TModalPayment, string>):boolean` - проверка формы оплаты.
 - `validationContactsData(data: Record<keyof TModalContacts, string>):boolean` - проверка формы контакты.
 - `clear():void` - очистка данных из форм после отравки.
+- а так-же сеттеры и геттеры для сохранения и получения данных из полей класса.
 
 #### Класс CardsData
 
@@ -198,13 +238,14 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 ##### Поля:
 
-- `cards: ICard[]` - массив карточек.
-- `preview: string | null` - для предварительного просмотра по id.
+- `cards: ICard[]` - поле для хранения массива карточек.
+- `preview: string | null` - поле для предварительного просмотра по id.
 - `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
 
 ##### Методы:
 
 - `getItem(itemId: string):ICard[]` - возвращаем карточку по id.
+- `clearPreview():void` - очищаем предпросмотр.
 - а так-же сеттеры и геттеры для сохранения и получения данных из полей класса.
 
 #### Класс CartData
@@ -213,117 +254,155 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 ##### Поля:
 
-- `cards: ICard[]` - массив карточек.
-- `totalPrice: number` - сумма стоимости товаров.
+- `cards: ICard[]` - поле для хранения массива карточек.
 - `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
 
 ##### Методы:
 
-- `addCard(card:ICard):void` - добавить товар.
-- `deleteCard(cardId:string):void` - удаляет товар.
-- `getTotalPrice():number` - складывает сумму.
+- `addCard(card:ICard):void` - добавление товара.
+- `deleteCard(cardId:string):void` - удаление товара.
+- `hasCard(cardId:string):boolean` - проверка наличия товара в корзине.
 - `clear():void` - очищает корзину после отправки.
+- а так-же сеттеры и геттеры для сохранени и получения данных из полей класса.
 
 ### Слой представления
 
-#### Класс CardsCatalog
+#### Базовый класс Component
 
-Реализует отображение блока с товарами на главной странице
+Класс является дженериком и родителем всех компонентов слоя представления. В дженерик принимает тип объекта, в котором данные будут передаваться в метод render для отображения данных в компоненте. В конструктор принимает элемент разметки, являющийся основным родительским контейнером компонента. Содержит метод render, отвечающий за сохранение полученных в параметре данных в полях компонентов через их сеттеры, возвращает обновленный контейнер компонента.
 
-##### Поля:
- 
-- `element: HTMlElement[]` - элемент для размещения товаров.
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий.
+#### Класс ModalView
 
-##### Методы:
-
-- `render(elements: HTMLElement[])` - добавляет все товары.
-- `handlerCardClick()` - слушатель клика по карточке.
-
-#### Класс Modal
-
-Класс реализует модальное окно.
+Класс отвечает за отображение и управление модальными окнами. Наследует класс `Component<IModalViewData>`.
 
 ##### Поля:
 
-- `element: HTMLElement` - элемент модального окна
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий.
+- `contentContainer: HTMLElement` - контейнер контента.
+- `closeButton: HTMLButtonElement` - кнопка закрытия модального окна.
 
 ##### Методы:
 
-- `openModal():void` - открывает модальное окно.
-- `closeModal():void` - закрывает модаьное окно.
-- `handleEscButton():void` - слушатель кнопки esc при открытии.
+- `render(data: Partial<IModalViewData>): HTMLElement` - рендерит модальное окно.
+- `renderContent(content: HTMLElement): void` - рендерит контент модального окна.
+- `setEventListeners(): void` - установка слушателя событий.
+- `open(): void` - открывает модальное окно.
+- `close(): void` - закрывает модальное окно.
+- `handleEsc(evt: keyEvent): void` - обрабатывает нажатие на esc.
+
+#### Класс CardView
+
+Класс для отображения карточки товара в каталоге. Наследует класс `Component<ICardViewData>`.
+
+##### Методы:
+
+- `render(data: Partial<CardViewData>):HTMLElement` - рендерит карточку.
+- `setEventListeners():void` - установка слушателя события клика по карточке.
 
 #### Класс CardModalView
 
-Реализация отображения общей информации карточки товара.
+Класс для отображения полной информации в модальном окне. Наследует класс Component<ICardPreviewData>.
 
 ##### Поля:
 
-- `element: HTMLElement` - элемент карточки товара.
-- `render(cardInfo: TCardTModalCardInfo)` - получает и отображает данные.
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий.
+- `buyButton`: HTMLButtonElement;
 
 ##### Методы:
 
-- `render(elements: HTMLElement[])` - создаёт элемент карточки товара.
-- `onClickBuyButton()` - слушатель клика на кнопку покупки.
+- `render(data: Partial<ICardPreviewData>):HTMLElement` - рендерит предпросмотр карточки.
+- `updateButtonState(inCart:boolean):void` - обновление состояния кнопки.
+- `setEventListeners():void` - установка слушателей событий на нажатие кнопок.
 
-#### Класс CartModalView
+#### Класс CartItemView
 
-Класс отображения элементов корзины.
+Класс для отображения товара. Наследует класс Component<TCartCardInfo>.
 
 ##### Поля:
 
-- `element: HTMLElement` - элемент списка товаров.
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий.
+- `deleteButton: HTMLButtonElement;` - кнопка удаления.
 
 ##### Методы:
 
-- `render()` - получает и отображает массив товаров.
-- `onClickConfirm()` - слушатель кнопки оформления.
-- `onClickDelete()` - слушатель кнопки удаления.
+- `render(data: Partial<TCartCardInfo>):HTMLElement`
+- `setEventListeners():void` - установка слушателя события на нажатие кнопки удаления.
 
-#### Класс AllFormsModalView
+#### Класс CartView
 
-Класс реализует отображение форм заказа.
+Класс отвечает за отображение корзины товаров.Наследует класс `Component<ICartModalViewData>`.
 
 ##### Поля:
 
-- `element: HTMLElement` - элемент формы для заполнения.
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий.
+- `container: HTMLElement` - контейнер для элементов корзины.
+- `totalElement: HTMLElement` - элемент для общей суммы.
+- `confirmButton: HTMLButtonElement` - кнопка оформления.
 
 ##### Методы:
 
-- `render()` - отображает поля.
-- `onClickConfirm()` - слушатель клика на кнопку оформления.
-- `validateForm()` - проверяет данные на валидность.
+- `render(data: Partial<CartmodalViewData>): HTMLElement` - рендерим корзину.
+- `renderItems(items: ICard[]):void` - рендерит список товаров.
+- `renderTotal(total: number): void` - рендерит общую сумму.
+- `setEventListeners():void` - устанавливает слушателя события на нажатие кнопки оформления.
 
-#### Класс ConfirmModalView
+#### Класс PaymentFormView
 
-Класс реализует отображение подтверждения оформления заказа.
+Класс отвечает за отображение формы оплаты и адреса доставки.Наслеует класс `Component<TModalPayment>`.
 
 ##### Поля:
 
-- `element: HTMLElement` - элемент последнего окна.
+- `addressInput: HTMLInputElement` - поле ввода адреса.
+- `cardPayment: HTMLButtonElement` - кнопка онлайн оплаты.
+- `cashPayment: HTMLButtonElement` - кнопка оплаты при получении.
+- `submitButton: HTMLElement` - кнопка продолжения оформления заказа.
+- `errorElement: HTMLElement` - элемент отображения ошибки.
 
 ##### Методы:
 
-- render(totalPrice: number) - отображает сумму.
+- `render(data: Partial<TModalPayent>):HTMLElement` - рендерит форму оплаты и адреса доставки.
+- `setEventListeners():void` - устанавливает слушателя события на input, кнопки выбора оплаты и продалжения оформления заказа.
+- `setValidationState(isValid: boolean, errorMessage: string):void` - устанавливает состояние валиации формы
+
+#### Класс ContactsFormView
+
+Класс отвечает за отображение формы контактных данных. Наследует класс `Component<TModalContacts>`.
+
+##### Поля:
+
+- `emailInput: HTMLInputElement` - поле ввода email.
+- `phoneInput: HTMLInputElement` - поле ввода телефона.
+- `submitButton: HTMLButtonElement` - кнопка оформления заказа.
+- `errorElement: HTMLElement` - элемент отображения ошибки.
+
+##### Методы:
+
+- `render(data: Partial<TModalContacts>):HTMLElement` - рендерит форму контактов.
+- `setEventListeners():void` - устанавливает слушателя события на input и продолжения оформления заказа.
+- `setValidationState(isValid: boolean, errorMessage: string):void` - устанавливает состояние валиации формы.
+
+#### Класс ConfirmView
+
+Класс отвечает за отображенние финального окна оформления заказа. Наследует класс `Component<{totalPrice: number}>`
+
+##### Поля:
+
+- `closeButton: HTMLButtonElement` -  кнопка закрытия.
+
+##### Методы:
+
+- `render(data: Partial<{totalPrice: number}>): HTMLElement` - рендерит финальное модальное окно.
+- `setEventListeners():void` - установка слушателя на кнопку закрытия финального модального окна.
 
 ### Слой коммуникации
 
 #### Класс AppApi
+
 Принимает в конструктор экземпляр класса Api и предоставляет методы реализующие взаимодействие с бэкендом сервиса.
 
 ## Взаимодействие компонентов
+
 Код, описывающий взаимодействие представления и данных между собой находится в файле `index.ts`, выполняющем роль презентера.\
 Взаимодействие осуществляется за счет событий генерируемых с помощью брокера событий и обработчиков этих событий, описанных в `index.ts`\
 В `index.ts` сначала создаются экземпляры всех необходимых классов, а затем настраивается обработка событий.
 
 #### Список всех событий, которые могут генерироваться в системе:
-
 
 ##### События с классами слоя представления.
 
