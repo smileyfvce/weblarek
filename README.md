@@ -49,9 +49,13 @@ npm run build
 yarn build
 ```
 
-## Данные и типы данных используемые в приложении
+## Данные и типы данных используемые в приложении:
 
-### Интерфейсы:
+#### Тип данных для вариантов оплаты заказа
+
+```
+type TPaymentОptions = 'card' | 'cash' | null;
+```
 
 #### Интерфейс данных заказа
 
@@ -66,7 +70,18 @@ interface IOrder {
 }
 ```
 
-#### Интерфейс данных карточки
+#### Тип данных для категорий товаров карточки
+
+```
+type TCategoryList =
+	| 'софт-скил'
+	| 'другое'
+	| 'дополнительное'
+	| 'кнопка'
+	| 'хард-скил';
+```
+
+#### Интерфейс модели данных карточки
 
 ```
 interface ICard {
@@ -79,88 +94,49 @@ interface ICard {
 }
 ```
 
-#### Интерфейс данных для модального окна
+#### Интерфейс для данных карточек на главной странице
+
 ```
-interface IModalViewData {
+interface ICardsList {
+  cards: ICard[];
+}
+```
+
+#### Модальное окно
+
+```
+interface IModalView {
   content: HTMLElement;    // контент модального окна
   isOpen: boolean;  // открыто/закрыто модальное окно
 }
 ```
 
-#### Интерфейс данных для предпросмотра карточки
+#### Интерфейс данных для карточки в модальном окне
 
 ```
-interface ICardPreviewData extends TModalCardInfo {
+interface ICardModalView extends ICard {
   inCart: boolean; // наличие товара в корзине
 }
 ```
 
-#### Интерфейс данных для отображения карточки
+#### Интерфейс данных для карточки в модальном окне
 
 ```
-interface CardViewData extends ICard {
-  inCart: boolean; // наличие товара в корзине
+interface ICartCount {
+	count: number;
 }
 ```
 
-#### Интерфейс данных корзины
+#### Тип данных корзины в модальном окне
 
 ```
-interface ICart {
-  cards: ICard[];
-}
-```
-
-#### Интерфейс для данных карточек
-
-```
-interface ICardsList {
-  cards: ICard[];
-  preview: string | null;
-}
-```
-
-#### Интерфейс данных для отображения корзины
-
-```
-interface ICartModalViewData {
-  items: ICard[];      // массив товаров в корзине
-  totalPrice: number;  // общая стоимость
-}
-```
-
-### Типы:
-
-#### Тип данных для категорий товаров
-
-```
-type TCategoryList =
-	| 'софт-скил'
-	| 'другое'
-	| 'дополнительное'
-	| 'кнопка'
-	| 'хард-скил';
-```
-
-#### Тип данных для вариантов оплаты
-
-```
-type TPaymentОptions = 'card' | 'cash' | null;
+type TCartModalView = Pick<IOrder, 'items' | 'total'>
 ```
 
 #### Тип данных для для информации товара на главной странице
 
 ```
-type TMainCardInfo = Pick<ICard, 'category' | 'title' | 'image' | 'price'>;
-```
-
-#### Тип данных для информации в модальном окне товара
-
-```
-type TModalCardInfo = Pick<
-	ICard,
-	'category' | 'title' | 'description' | 'image' | 'price'
->;
+type TMainCardInfo = Pick<ICard, 'id' | 'category' | 'title' | 'image' | 'price'>;
 ```
 
 #### Тип данных для информации товаров в корзине
@@ -216,7 +192,7 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 ##### Поля:
 
-- `_data: Partial<IOrder>` - Поле для хранения данных заказа.
+- `data: Partial<IOrder>` - Поле для хранения данных заказа.
 - `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
 
 ##### Методы:
@@ -271,9 +247,52 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 Класс является дженериком и родителем всех компонентов слоя представления. В дженерик принимает тип объекта, в котором данные будут передаваться в метод render для отображения данных в компоненте. В конструктор принимает элемент разметки, являющийся основным родительским контейнером компонента. Содержит метод render, отвечающий за сохранение полученных в параметре данных в полях компонентов через их сеттеры, возвращает обновленный контейнер компонента.
 
+#### Класс CartCount
+
+Класс отвечает за отображение счетчика колличества товаров в корзине. Наследует класс `Component<ICartCount>`
+
+##### Поля:
+
+- `count: HTMLElement` - элемент счетчика.
+
+##### Методы:
+
+- `render(data: Partial<ICartCount>):HTMLElement`
+- а так-же сеттеры для сохранения данных в полях класса
+
+#### Класс CardsCatalog
+
+Класс отвечает за отображение массива карточек на главной странице. Наследует класс `Component<ICardsList>`
+
+##### Поля:
+
+- `gallery: HTMLElement` - контейнер для карточек
+- `cardTemplate: HTMLTemplateElement` - темплейт карточки
+
+##### Методы:
+
+- `render(data: Partial<ICardList>):HTMLElement` - рендер карточек
+- а так-же сеттеры для сохранения данных в полях класса.
+
+#### Класс CardView
+
+Класс для отображения карточки товара в каталоге. Наследует класс `Component<TMainCardInfo>`.
+
+##### Поля:
+
+-`category:HTMLElement` - категории
+-`title:HTMLElement` - название
+-`image:HTMLImageElement` -  картинка
+-`price:HTMLElement` - цена
+
+##### Методы:
+
+- `render(data: Partial<TMainCardInfo>):HTMLElement` - рендерит карточку.
+- а так-же сеттеры для сохранения данных в полях класса.
+
 #### Класс ModalView
 
-Класс отвечает за отображение и управление модальными окнами. Наследует класс `Component<IModalViewData>`.
+Класс отвечает за отображение и закрытие модальных окон. Наследует класс `Component<IModalView>`.
 
 ##### Поля:
 
@@ -282,65 +301,60 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 ##### Методы:
 
-- `render(data: Partial<IModalViewData>): HTMLElement` - рендерит модальное окно.
-- `renderContent(content: HTMLElement): void` - рендерит контент модального окна.
-- `setEventListeners(): void` - установка слушателя событий.
+- `render(data: Partial<IModalView>): HTMLElement` - рендерит модальное окно.
 - `open(): void` - открывает модальное окно.
 - `close(): void` - закрывает модальное окно.
 - `handleEsc(evt: keyEvent): void` - обрабатывает нажатие на esc.
-
-#### Класс CardView
-
-Класс для отображения карточки товара в каталоге. Наследует класс `Component<ICardViewData>`.
-
-##### Методы:
-
-- `render(data: Partial<CardViewData>):HTMLElement` - рендерит карточку.
-- `setEventListeners():void` - установка слушателя события клика по карточке.
+- а так-же сеттеры для сохранения данных в полях класса.
 
 #### Класс CardModalView
 
-Класс для отображения полной информации в модальном окне. Наследует класс Component<ICardPreviewData>.
+Класс для отображения полной информации в модальном окне. Наследует класс `Component<ICardModalView>`.
 
 ##### Поля:
+- `category: HTMLElement` - категории.
+- `title: HTMLElement` - название.
+- `image: HTMLElement` - картинка.
+- `description: HTMLElement` - описание.
+- `price: HTMLElement` - цена.
+- `buyButton: HTMLButtonElement` - кнопка добавления в корзину.
 
-- `buyButton`: HTMLButtonElement;
 
 ##### Методы:
 
-- `render(data: Partial<ICardPreviewData>):HTMLElement` - рендерит предпросмотр карточки.
-- `updateButtonState(inCart:boolean):void` - обновление состояния кнопки.
-- `setEventListeners():void` - установка слушателей событий на нажатие кнопок.
+- а так-же сеттеры для сохранения данных в полях класса, а также меняет состояние кнопки.
 
 #### Класс CartItemView
 
-Класс для отображения товара. Наследует класс Component<TCartCardInfo>.
+Класс отвечает за отображения товара в корзине. Наследует класс `Component<TCartCardInfo>`.
 
 ##### Поля:
-
+- `indexItem: HTMLElement` - номер товара в корзине
+- `title: HTMLElement` - название
+- `price: HTMLElement` - цена
 - `deleteButton: HTMLButtonElement;` - кнопка удаления.
 
 ##### Методы:
 
 - `render(data: Partial<TCartCardInfo>):HTMLElement`
-- `setEventListeners():void` - установка слушателя события на нажатие кнопки удаления.
+- а так-же сеттеры для сохранения данных в полях класса.
 
 #### Класс CartView
 
-Класс отвечает за отображение корзины товаров.Наследует класс `Component<ICartModalViewData>`.
+Класс отвечает за отображение корзины товаров.Наследует класс `Component<ICartModalView>`.
 
 ##### Поля:
 
-- `container: HTMLElement` - контейнер для элементов корзины.
+- `container: HTMLElement` - контейнер для товаров в корзине.
+- `cardTemplate: HTMLTemplateElement` - темплейт карточки.
 - `totalElement: HTMLElement` - элемент для общей суммы.
 - `confirmButton: HTMLButtonElement` - кнопка оформления.
 
 ##### Методы:
 
-- `render(data: Partial<CartmodalViewData>): HTMLElement` - рендерим корзину.
-- `renderItems(items: ICard[]):void` - рендерит список товаров.
-- `renderTotal(total: number): void` - рендерит общую сумму.
-- `setEventListeners():void` - устанавливает слушателя события на нажатие кнопки оформления.
+- `render(data: Partial<ICartModalView>): HTMLElement` - рендер карточки товара в корзину.
+- `setCartEmpty():void` - метод нужен для отображения состояния "корзина пуста"
+- а так-же сеттеры для сохранения данных в полях класса.
 
 #### Класс PaymentFormView
 
@@ -357,8 +371,9 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 ##### Методы:
 
 - `render(data: Partial<TModalPayent>):HTMLElement` - рендерит форму оплаты и адреса доставки.
-- `setEventListeners():void` - устанавливает слушателя события на input, кнопки выбора оплаты и продалжения оформления заказа.
-- `setValidationState(isValid: boolean, errorMessage: string):void` - устанавливает состояние валиации формы
+- `selectPayment():TPaymentOptions` - для определения выбора оплаты
+- `setEvents():void` - инициализируем слушатели на форму(click, submit)
+- а так-же сеттеры для сохранения данных в полях класса.
 
 #### Класс ContactsFormView
 
@@ -374,8 +389,7 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 ##### Методы:
 
 - `render(data: Partial<TModalContacts>):HTMLElement` - рендерит форму контактов.
-- `setEventListeners():void` - устанавливает слушателя события на input и продолжения оформления заказа.
-- `setValidationState(isValid: boolean, errorMessage: string):void` - устанавливает состояние валиации формы.
+- `setEvents():void` - инициализируем слушатели на форму (input и submit).
 
 #### Класс ConfirmView
 
@@ -388,7 +402,7 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 ##### Методы:
 
 - `render(data: Partial<{totalPrice: number}>): HTMLElement` - рендерит финальное модальное окно.
-- `setEventListeners():void` - установка слушателя на кнопку закрытия финального модального окна.
+- `setEvents():void` - инициализируем слушатели на кнопку "за новыми покупками".
 
 ### Слой коммуникации
 

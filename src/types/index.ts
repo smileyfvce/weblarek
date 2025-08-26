@@ -1,4 +1,9 @@
+// Тип данных для вариантов оплаты заказа
+
+type TPaymentОptions = 'card' | 'cash' | null;
+
 // Интерфейс данных заказа
+
 interface IOrder {
 	address: string; // адрес
 	email: string; // почта
@@ -8,7 +13,17 @@ interface IOrder {
 	total: number; // общая сумма заказа
 }
 
-// Интерфейс данных карточки товара
+// Тип данных для категорий товаров карточки
+
+type TCategoryList =
+	| 'софт-скил'
+	| 'другое'
+	| 'дополнительное'
+	| 'кнопка'
+	| 'хард-скил';
+
+// Интерфейс модели данных карточки
+
 interface ICard {
 	id: string; // id товара
 	description: string; // описание
@@ -18,66 +33,47 @@ interface ICard {
 	price: number | null; // цена товара
 }
 
-// Интерфейс данных для отображения карточки
-interface CardViewData extends ICard {
-	inCart: boolean; // наличие товара в корзине
-}
+// Интерфейс для данных карточек на главной странице
 
-// Интерфейс данных корзины
-interface ICart {
-	cards: ICard[];
-}
-
-// Интерфейс для данных карточек
 interface ICardsList {
-	cards: ICard[];
-	preview: string | null;
+  cards: ICard[];
 }
 
-// Интерфейс данных для предпросмотра карточки
-interface ICardPreviewData extends TModalCardInfo {
-	inCart: boolean; // наличие товара в корзине
+// Модальное окно
+
+interface IModalView {
+  content: HTMLElement;    // контент модального окна
+  isOpen: boolean;  // открыто/закрыто модальное окно
 }
 
-// Интерфейс данных для отображения корзины
-interface ICartModalViewData {
-	items: ICard[]; // массив товаров в корзине
-	totalPrice: number; // общая стоимость
+// Интерфейс данных для карточки в модальном окне
+
+interface ICardModalView extends ICard {
+  inCart: boolean; // наличие товара в корзине
 }
 
-// Интерфейс данных для модального окна
+// Интерфейс счетчика товаров в корзине
 
-interface ModalViewData {
-	title: string; // заголовок модального окна
-	content: HTMLElement; // контент модального окна
-	isOpen: boolean; // открыто/закрыто модальное окно
+interface ICartCount {
+	count: number;
 }
 
-// Тип данных для категорий товаров
-type TCategoryList =
-	| 'софт-скил'
-	| 'другое'
-	| 'дополнительное'
-	| 'кнопка'
-	| 'хард-скил';
+// Тип данных корзины в модальном окне
 
-// Тип данных для вариантов оплаты
-type TPaymentОptions = 'card' | 'cash' | null;
+type TCartModalView = Pick<IOrder, 'items' | 'total'>;
 
-// Тип данных для информации товара на главной странице
-type TMainCardInfo = Pick<ICard, 'category' | 'title' | 'image' | 'price'>;
+// Тип данных для для информации товара на главной странице
 
-// Тип данных для информации в модальном окне товара
-type TModalCardInfo = Pick<
-	ICard,
-	'category' | 'title' | 'description' | 'image' | 'price'
->;
+type TMainCardInfo = Pick<ICard, 'id' | 'category' | 'title' | 'image' | 'price'>;
 
 // Тип данных для информации товаров в корзине
+
 type TCartCardInfo = Pick<ICard, 'id' | 'title' | 'price'>;
 
 // Тип данных для модального окна с выбором оплаты
+
 type TModalPayment = Pick<IOrder, 'payment' | 'address'>;
 
-// Тип даанных для модального окно с контактами
+// Тип данных для модального окно с контактами
+
 type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
