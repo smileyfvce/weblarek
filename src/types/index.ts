@@ -1,10 +1,17 @@
-// Тип данных для вариантов оплаты заказа
-
-type TPaymentОptions = 'card' | 'cash' | null;
+import { Component } from '../components/base/Component';
+// Интерфейс данных карточки
+export interface ICard {
+	id: string; // id товара
+	description: string; // описание
+	image: string; // url картинки
+	title: string; // название
+	category: string; // категории товара
+	price: number | null; // цена товара
+	index: number;
+}
 
 // Интерфейс данных заказа
-
-interface IOrder {
+export interface IOrder {
 	address: string; // адрес
 	email: string; // почта
 	phone: string; // телефон
@@ -12,68 +19,53 @@ interface IOrder {
 	items: string[]; // массив id товаров
 	total: number; // общая сумма заказа
 }
+// Тип данных для вариантов оплаты заказа
+export type TPaymentОptions = 'card' | 'cash' | '';
 
-// Тип данных для категорий товаров карточки
-
-type TCategoryList =
-	| 'софт-скил'
-	| 'другое'
-	| 'дополнительное'
-	| 'кнопка'
-	| 'хард-скил';
-
-// Интерфейс модели данных карточки
-
-interface ICard {
-	id: string; // id товара
-	description: string; // описание
-	image: string; // url картинки
-	title: string; // название
-	category: TCategoryList; // категории товара
-	price: number | null; // цена товара
+// Типы представления карточер товаров
+// Базовые поля всех карточек
+export type TBasicCardInfo = {
+	title: string;
+	price: number | null;
+};
+// Все остальные поля
+export type TDetailCardInfo = {
+	category?: string; // только в галерее и превью
+	image?: string; // только в галерее и превью
+	index?: number; // только в галерее и превью
+};
+// Интерфейсы представления карточек товаров
+// Базовый интерфейс с сетерами всех карточек его буду расширять
+export interface IBasicCardView {
+	set id(id: string);
+	set title(title: string);
+	set price(price: number);
+}
+// Детальный интерфейс карточки расширяет базовый
+export interface IDetailCardView extends IBasicCardView {
+	set category(category: string);
+	set image(url: string);
 }
 
-// Интерфейс для данных карточек на главной странице
-
-interface ICardsList {
-  cards: ICard[];
+// Интерфейс для превью карточки
+export interface ICardPreView extends IBasicCardView, IDetailCardView{
+	set description(descrtiption: string);
+	cardTextAddBasket():void;
+	cardTextDeleteBasket():void;
 }
 
-// Модальное окно
-
-interface IModalView {
-  content: HTMLElement;    // контент модального окна
-  isOpen: boolean;  // открыто/закрыто модальное окно
+// Тип корзины
+export type TBasketView = {
+	content: HTMLElement;
+	total: number;
 }
 
-// Интерфейс данных для карточки в модальном окне
+// Коммуникация с API
 
-interface ICardModalView extends ICard {
-  inCart: boolean; // наличие товара в корзине
+export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+
+export interface IApi {
+	baseUrl: string;
+	get<T>(uri: string): Promise<T>;
+	post<T>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
 }
-
-// Интерфейс счетчика товаров в корзине
-
-interface ICartCount {
-	count: number;
-}
-
-// Тип данных корзины в модальном окне
-
-type TCartModalView = Pick<IOrder, 'items' | 'total'>;
-
-// Тип данных для для информации товара на главной странице
-
-type TMainCardInfo = Pick<ICard, 'id' | 'category' | 'title' | 'image' | 'price'>;
-
-// Тип данных для информации товаров в корзине
-
-type TCartCardInfo = Pick<ICard, 'id' | 'title' | 'price'>;
-
-// Тип данных для модального окна с выбором оплаты
-
-type TModalPayment = Pick<IOrder, 'payment' | 'address'>;
-
-// Тип данных для модального окно с контактами
-
-type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
