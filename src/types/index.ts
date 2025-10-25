@@ -1,25 +1,25 @@
-import { Component } from '../components/base/Component';
-// Интерфейс данных карточки
+import { ApiPostMethods } from '../components/base/api';
+
 export interface ICard {
-	id: string; // id товара
-	description: string; // описание
-	image: string; // url картинки
-	title: string; // название
-	category: string; // категории товара
-	price: number | null; // цена товара
+	id: string;
+	description: string;
+	image: string;
+	title: string;
+	category: string;
+	price: number | null;
 }
 
-// Интерфейс данных заказа
 export interface IOrder {
-	address: string; // адрес
-	email: string; // почта
-	phone: string; // телефон
-	payment: 'card' | 'cash' | ''; // способы оплаты
+	address: string;
+	email: string; 
+	phone: string; 
+	payment: 'card' | 'cash' | '';
 }
 
-// Коммуникация с API
-
-export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+export interface IOrderRes {
+	id: string;
+	totalPrice: number;
+}
 
 export interface IApi {
 	baseUrl: string;

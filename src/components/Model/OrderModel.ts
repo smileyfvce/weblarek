@@ -1,71 +1,83 @@
 import { IOrder } from '../../types';
 import { IEvents } from '../base/events';
-// ГОТОВО
 
-export interface IOrderModel {
-	// получить данные заказа
-	getOrderInfo(): Partial<IOrder>;
-	// сохранить данные заказа
-	setOrderInfo(info: Partial<IOrder>): void;
-	// сохранить способ оплаты
-	setPayment(payment: string): void;
-	// сохранить адрес
-	setAddress(address: string): void;
-	// сохранить почту
-	setEmail(email: string): void;
-	// сохранить номер телефона
-	setPhone(phone: string): void;
-	// проверка на валидность
-	isValidOrder(order: IOrder): boolean;
-	isValidOrderData(): boolean;
-}
+export type TPaymentOptions = 'card' | 'cash' | '';
 
-export class OrderModel implements IOrderModel {
-	protected payment: string;
-	protected address: string;
-	protected email: string;
-	protected phone: string;
-	protected order: IOrder;
-	protected events: IEvents;
+export class OrderModel {
+	payment: TPaymentOptions = '';
+	address: string = '';
+	phone: string = '';
+	email: string = '';
+	errors: Partial<Record<keyof IOrder, string>> = {};
 
-	constructor(events: IEvents) {
-		this.events = events;
-	}
+	constructor(protected events: IEvents) { }
 
-	getOrderInfo() {
-		return this.order;
-	}
-
-	setOrderInfo(info: Partial<IOrder>) {
-		Object.assign(this.order, info);
-	}
-
-	setPayment(payment: string) {
-		this.payment = payment;
-		this.events.emit('payment:changed', { payment: this.payment });
-	}
-
-	setAddress(address: string) {
-		this.address = address;
-		this.events.emit('address:changed');
-	}
-
-	setEmail(email: string) {
-		this.email = email;
-	}
-
-	setPhone(phone: string) {
-		this.phone = phone;
-	}
-
-	isValidOrder(order: IOrder) {
-		return true;
-	}
-	isValidOrderData() {
-		if (this.payment && this.address) {
-			return true;
+	setValue(field: keyof IOrder, value: string) {
+		if (field === 'payment') {
+			this[field] = value as TPaymentOptions;
+			this.events.emit('payment:change', { value });
 		} else {
-			return false;
+			this[field] = value;
 		}
+	}
+
+	getData(): IOrder {
+		return {
+			payment: this.payment,
+			address: this.address,
+			phone: this.phone,
+			email: this.email,
+		};
+	}
+
+
+	private isValidEmail(email: string): boolean {
+		return email.includes('@') && email.length > 3;
+	}
+
+
+	private isValidPhone(phone: string): boolean {
+		return /^\d+$/.test(phone.replace(/\s/g, '')); // только цифры, пробелы игнорируем
+	}
+
+
+	validatePayment(): boolean {
+		this.errors = {};
+
+		if (!this.payment) {
+			this.errors.payment = 'Выберите способ оплаты';
+		}
+		if (!this.address?.trim()) {
+			this.errors.address = 'Укажите адрес';
+		}
+
+		return Object.keys(this.errors).length === 0;
+	}
+
+
+	validateContacts(): boolean {
+		this.errors = {};
+
+		if (!this.email?.trim()) {
+			this.errors.email = 'Укажите email';
+		} else if (!this.isValidEmail(this.email)) {
+			this.errors.email = 'Email должен содержать @';
+		}
+
+		if (!this.phone?.trim()) {
+			this.errors.phone = 'Укажите телефон';
+		} else if (!this.isValidPhone(this.phone)) {
+			this.errors.phone = 'Телефон должен содержать только цифры';
+		}
+
+		return Object.keys(this.errors).length === 0;
+	}
+
+	clear() {
+		this.payment = '';
+		this.address = '';
+		this.phone = '';
+		this.email = '';
+		this.errors = {};
 	}
 }

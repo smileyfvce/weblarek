@@ -186,60 +186,59 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 ### Слой данных
 
-#### Класс OrderData
-
-Класс отвечает за хранение и логику работы с данными заказа.
-
-##### Поля:
-
-- `data: Partial<IOrder>` - Поле для хранения данных заказа.
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
-
-##### Методы:
-
-- `setItems(items:string[])` - сохраняет список товаров.
-- `setPayment(payment:TPaymentOptions):void` - сохраняет данные способа оплаты.
-- `setAddress(address:string):void` - сохраняет данные поля адреса.
-- `setEmail(email:string):void` - сохраняет данные поля почты.
-- `setPhone(phone:string):void` - сохраняет данные поля телефона.
-- `setTotalPrice(total:number):void` - сохраняет общую стоимость.
-- `validationPaymentData(data: Record<keyof TModalPayment, string>):boolean` - проверка формы оплаты.
-- `validationContactsData(data: Record<keyof TModalContacts, string>):boolean` - проверка формы контакты.
-- `clear():void` - очистка данных из форм после отравки.
-- а так-же сеттеры и геттеры для сохранения и получения данных из полей класса.
-
-#### Класс CardsData
+#### Класс CardsModel
 
 Класс отвечает за хранение и логику работы с данными карточек товаров.
 
 ##### Поля:
 
-- `cards: ICard[]` - поле для хранения массива карточек.
-- `preview: string | null` - поле для предварительного просмотра по id.
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
+- `cards: ICard[]` - массив карточек
+- `preview: ICard` - выбранная для просмотра карточка
 
 ##### Методы:
 
-- `getItem(itemId: string):ICard[]` - возвращаем карточку по id.
-- `clearPreview():void` - очищаем предпросмотр.
-- а так-же сеттеры и геттеры для сохранения и получения данных из полей класса.
+- `getCards():ICard[]` - получить все карточки
+- `getCard(id: string): ICard` - получить карточку по id
+- `setSelectedCard(card: ICard): void` - установить выбранную карточку
+- `getSelectedCard(): ICard` - получить выбранную карточку
 
-#### Класс CartData
+#### Класс BasketModel
 
 Класс отвечает за хранение и логику работы с данными корзины.
 
 ##### Поля:
 
-- `cards: ICard[]` - поле для хранения массива карточек.
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
+- `cards: ICard[]` - товары в корзине
 
 ##### Методы:
 
-- `addCard(card:ICard):void` - добавление товара.
-- `deleteCard(cardId:string):void` - удаление товара.
-- `hasCard(cardId:string):boolean` - проверка наличия товара в корзине.
-- `clear():void` - очищает корзину после отправки.
-- а так-же сеттеры и геттеры для сохранени и получения данных из полей класса.
+- `addCard(card: ICard)` - добавить товар в корзину
+- `deleteCard(id: string): void` - удалить товар из корзины
+- `getCards(): ICard[]` - получить товары корзины
+- `getPriceSum(): number` - получить общую сумму
+- `getCardsSum(): number` - получить количество товаров
+- `cardInBasket(id: string): boolean` - проверка наличия товара
+- `clear(): void` - очистить корзину
+
+#### Класс OrderModel
+
+Класс отвечает за хранение и логику работы с данными заказа.
+
+##### Поля:
+
+- `payment: 'card' | 'cash'` - способ оплаты
+- `address: string` - адрес доставки
+- `email: string` - email покупателя
+- `phone: string` - телефон покупателя
+- `errors` - ошибки валидации
+
+##### Методы:
+
+- `getData(): IOrder` - получить данные заказа
+- `setValue(field: keyof IOrder, value: string): void` - установить значение поля
+- `validatePayment(): boolean` - валидация оплаты и адреса
+- `validateContacts(): boolean` - валидация контактов
+- `clear(): void` - очистить данные
 
 ### Слой представления
 
@@ -247,162 +246,170 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 Класс является дженериком и родителем всех компонентов слоя представления. В дженерик принимает тип объекта, в котором данные будут передаваться в метод render для отображения данных в компоненте. В конструктор принимает элемент разметки, являющийся основным родительским контейнером компонента. Содержит метод render, отвечающий за сохранение полученных в параметре данных в полях компонентов через их сеттеры, возвращает обновленный контейнер компонента.
 
-#### Класс CartCount
-
-Класс отвечает за отображение счетчика колличества товаров в корзине. Наследует класс `Component<ICartCount>`
+#### BaseFormView<T> - базовая форма
 
 ##### Поля:
 
-- `count: HTMLElement` - элемент счетчика.
+- `submit: HTMLButtonElement` - кнопка отправки формы
+
+- `_errors: HTMLElement` - элемент для отображения ошибок
+
+- `container: HTMLFormElement` - форма
+
+- `events: IEvents` - система событий
 
 ##### Методы:
 
-- `render(data: Partial<ICartCount>):HTMLElement`
-- а так-же сеттеры для сохранения данных в полях класса
+- `render(state: Partial<T> & Partial<IFormState>): HTMLElement` - отрисовка формы
 
-#### Класс CardsCatalog
+- `set valid(state: boolean)` - установить валидность формы
+- `set errors(messages: string[])` - установить ошибки
+- `_change(name: keyof T, value: string): void` - обработчик изменения поля
 
-Класс отвечает за отображение массива карточек на главной странице. Наследует класс `Component<ICardsList>`
+#### BaseCardView - базовый класс карточек
 
 ##### Поля:
 
-- `gallery: HTMLElement` - контейнер для карточек
-- `cardTemplate: HTMLTemplateElement` - темплейт карточки
+- `_id: string` - идентификатор карточки
+- `_title: HTMLElement` - элемент заголовка
+- `_price: HTMLElement` - элемент цены
+- `container: HTMLElement` - контейнер карточки
+- `events: IEvents` - система событий
 
 ##### Методы:
 
-- `render(data: Partial<ICardList>):HTMLElement` - рендер карточек
-- а так-же сеттеры для сохранения данных в полях класса.
+- `set id(id: string)` - установить ID
+- `set title(text: string)` - установить заголовок
+- `set price(price: number)` - установить цену
 
-#### Класс CardView
-
-Класс для отображения карточки товара в каталоге. Наследует класс `Component<TMainCardInfo>`.
+#### CardGalleryView - карточка в галерее, наследует все поля BaseCardView
 
 ##### Поля:
 
--`category:HTMLElement` - категории
--`title:HTMLElement` - название
--`image:HTMLImageElement` -  картинка
--`price:HTMLElement` - цена
+- `_category: HTMLElement` - элемент категории
+- `_image: HTMLImageElement` - элемент изображения
 
 ##### Методы:
 
-- `render(data: Partial<TMainCardInfo>):HTMLElement` - рендерит карточку.
-- а так-же сеттеры для сохранения данных в полях класса.
+- `set category(value: string)` - установить категорию
+- `set image(url: string)` - установить изображение
 
-#### Класс ModalView
-
-Класс отвечает за отображение и закрытие модальных окон. Наследует класс `Component<IModalView>`.
+#### CardPreviewView - превью карточки, наследует все поля CardGalleryView
 
 ##### Поля:
 
-- `contentContainer: HTMLElement` - контейнер контента.
-- `closeButton: HTMLButtonElement` - кнопка закрытия модального окна.
+- `_description: HTMLElement` - элемент описания
+- `cardButton: HTMLButtonElement` - кнопка действия
 
 ##### Методы:
 
-- `render(data: Partial<IModalView>): HTMLElement` - рендерит модальное окно.
-- `open(): void` - открывает модальное окно.
-- `close(): void` - закрывает модальное окно.
-- `handleEsc(evt: keyEvent): void` - обрабатывает нажатие на esc.
-- а так-же сеттеры для сохранения данных в полях класса.
+- `set description(text: string)` - установить описание
+- `set textButton(text: string)` - установить текст кнопки
+- `set price(price: number | null)` - установить цену
 
-#### Класс CardModalView
-
-Класс для отображения полной информации в модальном окне. Наследует класс `Component<ICardModalView>`.
-
-##### Поля:
-- `category: HTMLElement` - категории.
-- `title: HTMLElement` - название.
-- `image: HTMLElement` - картинка.
-- `description: HTMLElement` - описание.
-- `price: HTMLElement` - цена.
-- `buyButton: HTMLButtonElement` - кнопка добавления в корзину.
-
-
-##### Методы:
-
-- а так-же сеттеры для сохранения данных в полях класса, а также меняет состояние кнопки.
-
-#### Класс CartItemView
-
-Класс отвечает за отображения товара в корзине. Наследует класс `Component<TCartCardInfo>`.
-
-##### Поля:
-- `indexItem: HTMLElement` - номер товара в корзине
-- `title: HTMLElement` - название
-- `price: HTMLElement` - цена
-- `deleteButton: HTMLButtonElement;` - кнопка удаления.
-
-##### Методы:
-
-- `render(data: Partial<TCartCardInfo>):HTMLElement`
-- а так-же сеттеры для сохранения данных в полях класса.
-
-#### Класс CartView
-
-Класс отвечает за отображение корзины товаров.Наследует класс `Component<ICartModalView>`.
+#### CardBasketView - карточка в корзине, наследует все поля BaseCardView
 
 ##### Поля:
 
-- `container: HTMLElement` - контейнер для товаров в корзине.
-- `cardTemplate: HTMLTemplateElement` - темплейт карточки.
-- `totalElement: HTMLElement` - элемент для общей суммы.
-- `confirmButton: HTMLButtonElement` - кнопка оформления.
+- `_index: HTMLElement` - элемент индекса
+- `deleteButton: HTMLButtonElement` - кнопка удаления карточки из корзины
 
 ##### Методы:
 
-- `render(data: Partial<ICartModalView>): HTMLElement` - рендер карточки товара в корзину.
-- `setCartEmpty():void` - метод нужен для отображения состояния "корзина пуста"
-- а так-же сеттеры для сохранения данных в полях класса.
+- `set cardIndex(num: number)` - сеттер установки индекса карточки в корзине
 
-#### Класс PaymentFormView
-
-Класс отвечает за отображение формы оплаты и адреса доставки.Наслеует класс `Component<TModalPayment>`.
+#### GalleryView - главная страница с товарами
 
 ##### Поля:
 
-- `addressInput: HTMLInputElement` - поле ввода адреса.
-- `cardPayment: HTMLButtonElement` - кнопка онлайн оплаты.
-- `cashPayment: HTMLButtonElement` - кнопка оплаты при получении.
-- `submitButton: HTMLElement` - кнопка продолжения оформления заказа.
-- `errorElement: HTMLElement` - элемент отображения ошибки.
+- `gallery: HTMLElement` - контейнер галереи
+- `container: HTMLElement` - основной контейнер
+- `events: IEvents` - система событий
 
 ##### Методы:
 
-- `render(data: Partial<TModalPayent>):HTMLElement` - рендерит форму оплаты и адреса доставки.
-- `selectPayment():TPaymentOptions` - для определения выбора оплаты
-- `setEvents():void` - инициализируем слушатели на форму(click, submit)
-- а так-же сеттеры для сохранения данных в полях класса.
+- `set content(cards: HTMLElement[])` - установить карточки
+- `set wrapperLock(lock: boolean)` - блокировка скролла
 
-#### Класс ContactsFormView
-
-Класс отвечает за отображение формы контактных данных. Наследует класс `Component<TModalContacts>`.
+#### BasketView - корзина товаров
 
 ##### Поля:
 
-- `emailInput: HTMLInputElement` - поле ввода email.
-- `phoneInput: HTMLInputElement` - поле ввода телефона.
-- `submitButton: HTMLButtonElement` - кнопка оформления заказа.
-- `errorElement: HTMLElement` - элемент отображения ошибки.
+- `_list: HTMLElement` - список товаров
+- `basketButton: HTMLButtonElement` - кнопка оформления
+- `_priceCounter: HTMLElement` - элемент общей суммы
+- `container: HTMLElement` - контейнер корзины
+- `events: IEvents` - система событий
 
 ##### Методы:
 
-- `render(data: Partial<TModalContacts>):HTMLElement` - рендерит форму контактов.
-- `setEvents():void` - инициализируем слушатели на форму (input и submit).
+- `setCards(cards: HTMLElement[]): void` - установить карточки корзины
+- `setTotal(total: number): void` - установить общую сумму
 
-#### Класс ConfirmView
-
-Класс отвечает за отображенние финального окна оформления заказа. Наследует класс `Component<{totalPrice: number}>`
+#### HeaderView - шапка приложения
 
 ##### Поля:
 
-- `closeButton: HTMLButtonElement` -  кнопка закрытия.
+- `basketButton: HTMLButtonElement` - кнопка корзины
+- `basketCounter: HTMLElement` - счетчик корзины
+- `container: HTMLElement` - контейнер шапки
+- `events: IEvents` - система событий
 
 ##### Методы:
 
-- `render(data: Partial<{totalPrice: number}>): HTMLElement` - рендерит финальное модальное окно.
-- `setEvents():void` - инициализируем слушатели на кнопку "за новыми покупками".
+- `set counter(num: number)` - установить счетчик корзины
+
+#### ModalView - модальное окно
+
+##### Поля:
+
+- `contentElement: HTMLElement` - контейнер контента
+- `closeButton: HTMLButtonElement` - кнопка закрытия
+- `container: HTMLElement` - контейнер модалки
+- `events: IEvents` - система событий
+
+##### Методы:
+
+- `set content(element: HTMLElement)` - установить контент
+- `openModal(): void` - открыть модальное окно
+- `closeModal(): void` - закрыть модальное окно
+
+#### PaymentFormView - форма оплаты и адреса, наследует все поля BaseFormView
+
+##### Поля:
+
+- `cardButton: HTMLButtonElement` - кнопка оплаты картой
+- `cashButton: HTMLButtonElement` - кнопка оплаты наличными
+- `_address: HTMLInputElement` - поле адреса
+
+##### Методы:
+
+- `togglePayment(selected: 'card' | 'cash'): void` - переключить способ оплаты
+- `set address(value: string)` - установить адрес
+
+#### ContactsFormView - форма контактов, наследует все поля BaseFormView
+
+#### Поля:
+
+- `_email: HTMLInputElement` - поле email
+- `_phone: HTMLInputElement` - поле телефона
+
+#### Методы:
+
+- `set email(value: string)` - установить email
+- `set phone(value: string)` - установить телефон
+
+#### ConfirmFormView - подтверждение заказа
+
+##### Поля:
+
+- `closeButton: HTMLButtonElement` - кнопка закрытия
+- `description: HTMLElement` - элемент описания
+- `container: HTMLElement` - контейнер подтверждения
+
+##### Методы:
+
+- `set total(value: number)` - установить итоговую сумму
 
 ### Слой коммуникации
 
@@ -419,33 +426,43 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 #### Список всех событий, которые могут генерироваться в системе:
 
 ##### События с классами слоя представления.
+#### Работа с товарами:
 
-- `card:open` - открыть карточку.
-- `card:submit` - добавить товар в корзину.
+- `cards:changed` - обновлен список карточек
 
-- `cart:open` - открыть корзину.
-- `cart:submit` - оформить список заказа.
-- `cart:delete` - удалить товар из корзины.
+`card:open` - открыть карточку товара
 
-- `order:open` - открыть модалку способа оплаты.
-- `order-address:input` - изменение данных адреса в форме способа оплаты.
-- `order-address:validate` - валидация формы с адресом.
-- `order-payment:changed` - переключение способа оплаты.
-- `order:submit` - подтверждение формы способа оплаты.
+`card:selected` - карточка выбрана для просмотра
 
-- `order-contacts:open` - открыть модалку с контактами.
-- `order-email:input` - изменение данных почты.
-- `order-email:validate` - валидация формы с почтой.
-- `order-phone:input` - изменение данных телефона.
-- `order-phone:validate` - валидация формы с телефоном.
-- `order-contacts:submit` - подтверждение формы контактов.
+`card:toggle` - добавить/удалить из корзины
 
-- `confirm:submit` - подтверждение формы успешного заказа.
-- `modal:close` - закрыть модальное окно.
+`card:delete` - удалить из корзины
 
-##### События с классами слоя данных.
+#### Работа с корзиной:
 
-- `card:changed` - изменение данных модалки карточки.
-- `cart:changed` - изменение данных модалки корзины.
-- `count:changed` - изменение счётчика товаров.
-- `totalPrice:changed` - изменение суммы товаров в корзине.
+`basket:changed` - изменилось содержимое корзины
+
+`basket:open` - открыть корзину
+
+`order:open` - начать оформление заказа
+
+#### Формы заказа:
+
+`order.address:change` - изменился адрес
+
+`order.payment:change` - изменился способ оплаты
+
+`contacts.email:change` - изменился email
+
+`contacts.phone:change` - изменился телефон
+
+`order:submit` - отправка формы оплаты
+
+`contacts:submit` - отправка формы контактов
+
+#### Модальные окна:
+
+`modal:open` - открытие модалки
+
+`modal:close` - закрытие модалки
+

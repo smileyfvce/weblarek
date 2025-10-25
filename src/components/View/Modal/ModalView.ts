@@ -2,7 +2,6 @@ import { EventEmitter, IEvents } from '../../base/events';
 import { Component } from '../../base/Component';
 import { ensureElement } from '../../../utils/utils';
 
-//+
 export interface IModalView {
 	content: HTMLElement;
 }
@@ -15,7 +14,9 @@ export class ModalView extends Component<IModalView> {
 		super(container);
 		this.contentElement = ensureElement('.modal__content', this.container);
 		this.closeButton = ensureElement<HTMLButtonElement>(
-			'.modal__close', this.container);
+			'.modal__close',
+			this.container
+		);
 		this.closeButton.addEventListener('click', () => {
 			this.closeModal();
 		});
@@ -28,7 +29,11 @@ export class ModalView extends Component<IModalView> {
 	}
 
 	set content(element: HTMLElement) {
-		this.contentElement.replaceChildren(element);
+		if (element) {
+			this.contentElement.replaceChildren(element);
+		} else {
+			this.contentElement.innerHTML = '';
+		}
 	}
 
 	openModal() {
@@ -37,13 +42,14 @@ export class ModalView extends Component<IModalView> {
 	}
 
 	closeModal() {
-		this.content = null;
 		this.container.classList.remove('modal_active');
 		this.events.emit('modal:close');
 	}
 
-	render(content: IModalView): HTMLElement {
-		super.render(content);
+	render(data?: IModalView): HTMLElement {
+		if (data?.content) {
+			this.content = data.content;
+		}
 		this.openModal();
 		return this.container;
 	}

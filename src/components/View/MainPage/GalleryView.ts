@@ -1,7 +1,6 @@
 import { ensureElement } from '../../../utils/utils';
 import { Component } from '../../base/Component';
 import { IEvents } from '../../base/events';
-// +
 
 export interface IGalleryView {
 	cards: HTMLElement[];
@@ -15,11 +14,11 @@ export class GalleryView extends Component<IGalleryView> {
 		super(container);
 		this.gallery = ensureElement('.gallery', this.container);
 	}
-	// сеттер для карточек в галлерее
+
 	set content(cards: HTMLElement[]) {
 		this.gallery.replaceChildren(...cards);
 	}
-	// сеттер для блокировки прокрутки
+
 	set wrapperLock(lock: boolean) {
 		if (lock) {
 			this.container.classList.add('page__wrapper_locked');
