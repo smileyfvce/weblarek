@@ -1,17 +1,20 @@
-import { IBasicCardView } from "../../../types";
+import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../base/events";
-import { BasicCardView } from "./BasicCardView";
-// ГОТОВО
-export class CardBasketView extends BasicCardView implements IBasicCardView{
-  protected button: HTMLButtonElement;
-  
-  constructor(container: HTMLElement, events: IEvents){
+import { BaseCardView } from "./BaseCardView";
+// +
+export class CardBasketView extends BaseCardView{
+  protected _index: HTMLElement;
+  protected deleteButton: HTMLButtonElement;
+
+  constructor(protected container: HTMLElement, protected events: IEvents){
     super(container, events)
-    this.button = container.querySelector('.basket__item-delete');
-    this.events = events
-    this.button.addEventListener('click', () => {
+    this._index = ensureElement('.basket__item-index', this.container)
+    this.deleteButton = ensureElement<HTMLButtonElement>('.basket__item-delete', this.container);
+    this.deleteButton.addEventListener('click', () => {
       events.emit('card: delete', {id: this._id})
     })
-
+  }
+  set index(num: number){
+    this.setText(this._index, num)
   }
 }

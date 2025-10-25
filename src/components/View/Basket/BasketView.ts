@@ -1,29 +1,38 @@
-import { ICard, TBasketView } from '../../../types';
-import { Component } from '../../base/Component';
-import { IEvents } from '../../base/events';
-// ГОТОВО
-export class BasketView extends Component<TBasketView> {
-	protected cards: ICard[];
-	protected _content: HTMLElement;
-	protected button: HTMLButtonElement;
-	protected _priceCounter: HTMLElement;
-	protected events: IEvents;
+import { createElement, ensureAllElements, ensureElement } from "../../../utils/utils";
+import { Component } from "../../base/Component";
+import { IEvents } from "../../base/events";
 
-	constructor(container: HTMLElement, evens: IEvents) {
+// +
+export interface IBasketView {
+  cards: HTMLElement[];
+  total: number;
+}
+export class BasketView extends Component<IBasketView> {
+	protected _content: HTMLElement;
+	protected basketButton: HTMLButtonElement;
+	protected _priceCounter: HTMLElement;
+
+	constructor(protected container: HTMLElement, protected events: IEvents) {
 		super(container);
-		this._content = container.querySelector('.basket__list');
-		this.button = container.querySelector('.basket__button');
-		this._priceCounter = container.querySelector('.basket__price');
-		this.button.addEventListener('click', () => {
+		this._content = ensureElement('.basket__list', this.container);
+		this.basketButton = ensureElement<HTMLButtonElement>('.basket__button', this.container);
+    this._priceCounter = ensureElement('.basket__price', this.container);
+		this.basketButton.addEventListener('click', () => {
 			this.events.emit('order:open');
 		});
 	}
 
-	set content(content: HTMLElement[]) {
-		this._content.replaceChildren(...content);
+  	set content(cards: HTMLElement[]) {
+		if(cards.length){
+      this._content.replaceChildren(...cards)
+      this.setDisabled(this.basketButton, false);
+    }else {
+      this._content.replaceChildren(createElement<HTMLParagraphElement>('p', {textContent: 'Корзина пуста'}))
+    this.setDisabled(this.basketButton,true)
+    }
 	}
 
 	set total(total: number) {
-		this._priceCounter.textContent = `${total.toString()} синапсов`;
+	this.setText(this._priceCounter, `${total.toString()} синапсов`);
 	}
 }

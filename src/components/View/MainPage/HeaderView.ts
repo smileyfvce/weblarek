@@ -2,28 +2,26 @@ import { ensureElement } from "../../../utils/utils";
 import { Component } from "../../base/Component";
 import { IEvents } from "../../base/events";
 
-// ГОТОВО
+// +
 
 export interface IHeaderView{
-   // сохранить счётчик
-  set counter(counter: number)
+  counter: number;
 }
 
 export class HeaderView extends Component<IHeaderView>{
   protected basketButton: HTMLButtonElement;
   protected basketCounter: HTMLElement;
-  protected events: IEvents;
   
-  constructor(container: HTMLElement, events: IEvents){
+  constructor(protected container: HTMLElement, protected events: IEvents){
     super(container)
-    this.basketButton = ensureElement<HTMLButtonElement>('.header__basket')
-    this.basketCounter = ensureElement('.header__basket-counter')
+    this.basketButton = ensureElement<HTMLButtonElement>('.header__basket', this.container)
+    this.basketCounter = ensureElement('.header__basket-counter', this.container)
     this.basketButton.addEventListener('click', () => {
-      events.emit('basket:open')
+      this.events.emit('basket:open')
     })
   }
  
-  set counter(counter: number){
-    this.basketCounter.textContent = counter.toString();
+  set counter(num: number){
+    this.setText(this.basketCounter, num);
   }
 }

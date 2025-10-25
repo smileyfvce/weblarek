@@ -1,23 +1,20 @@
 import { IApi } from '../../types';
 import { ICard } from '../../types/index';
-import { ApiListResponse } from './api';
-export class AppApi {
-	private _baseApi: IApi;
-	private _cdn: string;
+import { Api, ApiListResponse } from './api';
+export class AppApi extends Api {
+	private cdn: string;
 
-	constructor(baseApi: IApi, cdn: string) {
-		this._baseApi = baseApi;
-		this._cdn = cdn;
+	constructor(cdn: string, baseUrl: string, options?: RequestInit) {
+		super(baseUrl, options);
+		this.cdn = cdn;
 	}
 
 	getCards(): Promise<ICard[]> {
-		return this._baseApi
-			.get<ApiListResponse<ICard>>(`/product`)
-			.then((response) =>
-				response.items.map((item) => ({
-					...item,
-					image: this._cdn + item.image,
-				}))
-			);
+		return this.get('/product').then((response: ApiListResponse<ICard>) =>
+			response.items.map((item) => ({
+				...item,
+				image: this.cdn + item.image,
+			}))
+		);
 	}
 }

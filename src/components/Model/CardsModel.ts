@@ -1,34 +1,30 @@
 import { ICard } from "../../types";
 import { IEvents } from "../base/events";
-// ГОТОВО
-
-export interface ICardsModel {
-	// получает карточки
-	getCards(): ICard[];
-	// сохраняет карточки
-	setCards (cards: ICard[]): void;
-	// получает карточку по id
-	getCard(id: string): ICard;
-}
-
-export class CardsModel implements ICardsModel {
-	protected cards: ICard[];
+//+
+export class CardsModel {
+	protected cards: ICard[] = [];
 	protected preview: ICard;
-	protected events: IEvents;
 
-	constructor(events: IEvents) {
-		this.events = events;
+	constructor(protected events: IEvents) {}
+	// получить выбранную карточку
+	getSelectedCard():ICard{
+		return this.preview;
 	}
-
+	// получить карточки
 	getCards() {
 		return this.cards;
 	}
-
+	// сохранить выбранную карточку
+	setSelectedCard(card:ICard){
+		this.preview = card;
+		this.events.emit('card:selected')
+	}
+	// установить карточки
 	setCards(cards: ICard[]) {
 		this.cards = cards;
 		this.events.emit('cards:changed');
 	}
-
+	// получить карточку по id
 	getCard(id: string) {
 		return this.cards.find((card) => card.id === id);
 	}

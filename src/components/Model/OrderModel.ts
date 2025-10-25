@@ -1,4 +1,4 @@
-import { IOrder, TPaymentОptions } from '../../types';
+import { IOrder } from '../../types';
 import { IEvents } from '../base/events';
 // ГОТОВО
 
@@ -8,7 +8,7 @@ export interface IOrderModel {
 	// сохранить данные заказа
 	setOrderInfo(info: Partial<IOrder>): void;
 	// сохранить способ оплаты
-	setPayment(payment: TPaymentОptions): void;
+	setPayment(payment: string): void;
 	// сохранить адрес
 	setAddress(address: string): void;
 	// сохранить почту
@@ -21,7 +21,7 @@ export interface IOrderModel {
 }
 
 export class OrderModel implements IOrderModel {
-	protected payment: TPaymentОptions;
+	protected payment: string;
 	protected address: string;
 	protected email: string;
 	protected phone: string;
@@ -40,7 +40,7 @@ export class OrderModel implements IOrderModel {
 		Object.assign(this.order, info);
 	}
 
-	setPayment(payment: TPaymentОptions) {
+	setPayment(payment: string) {
 		this.payment = payment;
 		this.events.emit('payment:changed', { payment: this.payment });
 	}

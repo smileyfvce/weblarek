@@ -1,40 +1,50 @@
 import { EventEmitter, IEvents } from '../../base/events';
 import { Component } from '../../base/Component';
+import { ensureElement } from '../../../utils/utils';
 
-//ГОТОВО
+//+
 export interface IModalView {
-	set content(content: HTMLElement);
-	openModal(): void;
-	closeModal(): void;
+	content: HTMLElement;
 }
 
-export class ModalView extends Component<IModalView> implements IModalView {
-	protected _content: HTMLElement;
+export class ModalView extends Component<IModalView> {
+	protected contentElement: HTMLElement;
 	protected closeButton: HTMLButtonElement;
-	protected events: IEvents;
 
-	constructor(protected container: HTMLElement, events: IEvents) {
+	constructor(protected container: HTMLElement, protected events: IEvents) {
 		super(container);
-		this._content = container.querySelector('.modal__content');
-		this.closeButton = container.querySelector('.modal__close');
+		this.contentElement = ensureElement('.modal__content', this.container);
+		this.closeButton = ensureElement<HTMLButtonElement>(
+			'.modal__close', this.container);
 		this.closeButton.addEventListener('click', () => {
 			this.closeModal();
 		});
-		this.container.addEventListener('mousedown', (event) => {
-			if (event.target === event.currentTarget) {
+
+		this.container.addEventListener('click', (event: MouseEvent) => {
+			if (event.target === this.container) {
 				this.closeModal();
 			}
 		});
 	}
-	set content(content: HTMLElement) {
-		this._content.replaceChildren(content);
+
+	set content(element: HTMLElement) {
+		this.contentElement.replaceChildren(element);
 	}
 
 	openModal() {
-		this._content.classList.add('modal_active');
+		this.container.classList.add('modal_active');
+		this.events.emit('modal:open');
 	}
 
 	closeModal() {
-		this._content.classList.remove('modal_active');
+		this.content = null;
+		this.container.classList.remove('modal_active');
+		this.events.emit('modal:close');
+	}
+
+	render(content: IModalView): HTMLElement {
+		super.render(content);
+		this.openModal();
+		return this.container;
 	}
 }

@@ -1,31 +1,13 @@
 import { ICard } from '../../types';
 import { IEvents } from '../base/events';
-// ГОТОВО
+//+
 
-export interface IBasketModel {
-	// получить товары
-	getCards(): ICard[];
-	// добавить товар
-	addCard(card: ICard): void;
-	// удалить товар
-	deleteCard(id: string): void;
-	// проверка товаров на наличие в корзине
-	cardInBasket(id: string): boolean;
-	// получить общую сумму
-	getTotal(cards: ICard[]): number;
-	// получить колличество товаров в корзине
-	getCardsLength(): number;
-}
-
-export class BasketModel implements IBasketModel {
+export class BasketModel {
 	protected cards: ICard[] = [];
-	protected events: IEvents;
 
-	constructor(events: IEvents) {
-		this.events = events;
-	}
+	constructor(protected events: IEvents) {}
 
-	getCards() {
+	getCards():ICard[] {
 		return this.cards;
 	}
 
@@ -37,19 +19,23 @@ export class BasketModel implements IBasketModel {
 	}
 
 	deleteCard(id: string) {
-		this.cards = this.cards.filter((item) => item.id !== id);
+		this.cards = this.cards.filter((card) => card.id !== id);
 		this.events.emit('basket:changed');
 	}
 
+	clear(){
+		this.cards.forEach(card => {this.deleteCard(card.id)})
+	}
+
 	cardInBasket(id: string) {
-		return this.cards.some((item) => item.id === id);
+		return this.cards.some((card) => card.id === id);
 	}
 
-	getTotal(cards: ICard[]) {
-		return this.cards.reduce((price, card) => price + card.price, 0);
+	getPriceSum():number {
+		return this.cards.reduce((sum, card) => sum + card.price, 0);
 	}
 
-	getCardsLength() {
+	getCardsSum() {
 		return this.cards.length;
 	}
 }

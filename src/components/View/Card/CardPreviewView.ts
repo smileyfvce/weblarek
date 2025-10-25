@@ -1,28 +1,48 @@
-import { ICardPreView } from "../../../types";
+import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../base/events";
-import { DetailCardView } from "./DetailCardView";
-// ГОТОВО
-export class CardPreView extends DetailCardView implements ICardPreView{
-  protected _description: HTMLElement;
-  protected button: HTMLButtonElement;
+import { TBaseCardView } from "./BaseCardView";
+import { CardGalleryView } from "./CardGalleryView";
+// +
 
-  constructor(container: HTMLElement, events: IEvents){
+export type TCardPreviewView = {
+  description: string;
+  buttonText: string;
+} & TBaseCardView;
+
+export class CardPreviewView extends CardGalleryView{
+  protected _description: HTMLElement;
+  protected cardButton: HTMLButtonElement;
+
+  constructor(protected container: HTMLElement, protected events: IEvents){
     super(container, events)
-    this._description = container.querySelector('.card__text');
-    this.button = container.querySelector('.card__button');
-    this.button.addEventListener('click', () => {
+    this._description = ensureElement('.card__text', this.container);
+    this.cardButton = ensureElement<HTMLButtonElement>('.card__button', this.container);
+    this.cardButton.addEventListener('click', () => {
       events.emit('card:add', {id: this._id})
     })
   }
-
-  set description(description: string){
-    this._description.textContent = description;
+  // сеттер описания
+  set description(text: string){
+    this.setText(this._description, text);
   }
-
-  cardTextAddBasket() {
-    this.button.textContent = 'Купить'
+  // сеттер стоимости товара
+  set price(price: number | null){
+    super.price = price;
+    if(price !== null){
+      this.setDisabled(this.cardButton, false)
+    } else {
+      this.setDisabled(this.cardButton, true)
+      this.setText(this.cardButton, 'Недоступно')
+    }
   }
-  cardTextDeleteBasket() {
-    this.button.textContent = 'Удалить из корзины'    
+  // сеттер текста на кнопке
+  set textButton(text: string){
+    if(this.cardButton.disabled){return}
+    this.setText(this.cardButton, text) 
+  }
+  
+  render(data?: Partial<TBaseCardView>): HTMLElement {
+    Object.assign(this as object, data ?? {})
+    return this.container
   }
 }
