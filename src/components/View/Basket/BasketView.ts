@@ -45,7 +45,4 @@ export class BasketView extends Component<IBasketView> {
 	setTotal(total: number): void {
 		this.setText(this._priceCounter, `${total.toString()} синапсов`);
 	}
-	render(): HTMLElement {
-		return super.render();
-	}
 }

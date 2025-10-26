@@ -139,26 +139,17 @@ events.on('card:selected', () => {
 
 // ОТКРЫТИЕ КОРЗИНЫ
 events.on('basket:open', () => {
-	const cards = basketModel.getCards().map((card, index) => {
-		const cardView = new CardBasketView(
-			cloneTemplate(cardBasketTemplate),
-			events
-		);
-		return cardView.render({
-			id: card.id,
-			title: card.title,
-			price: card.price,
-			cardIndex: index + 1,
-		});
-	});
-	basket.setCards(cards);
-	basket.setTotal(basketModel.getPriceSum());
 	modal.render({ content: basket.render() });
 	modal.openModal();
 });
 
 // ОТКРЫТИЕ ФОРМЫ ОПЛАТЫ
 events.on('order:open', () => {
+	// Проверяем, что в корзине есть товары
+	if (basketModel.getCardsSum() === 0) {
+		console.error('Корзина пуста, невозможно открыть форму заказа');
+		return;
+	}
 	const form = paymentForm.render({
 		address: '',
 		valid: false,
@@ -215,7 +206,7 @@ events.on('contacts.email:change', (data: any) => {
 events.on('contacts.phone:change', (data: any) => {
 	orderModel.setValue('phone', data.value);
 
-	const isValid = orderModel.validateContacts(); 
+	const isValid = orderModel.validateContacts();
 	const errors = orderModel.errors;
 
 	contactsForm.render({
@@ -226,12 +217,10 @@ events.on('contacts.phone:change', (data: any) => {
 
 // ПОДТВЕРДИЛИ СПОСОБ ОПЛАТЫ И АДРЕС
 events.on('order:submit', () => {
-	if (!orderModel.validatePayment()){ return};
-
 	const contactFormHTML = contactsForm.render({
 		email: orderModel.email || '',
 		phone: orderModel.phone || '',
-		valid: false,
+		valid: true,
 		errorMessage: [],
 	});
 
@@ -240,35 +229,48 @@ events.on('order:submit', () => {
 	});
 });
 
-// ПОДТВЕРДИЛИ EMAIL и  ТЕЛЕФОН
+// ПОДТВЕРДИЛИ EMAIL и ТЕЛЕФОН
 events.on('contacts:submit', () => {
-	const orderData = orderModel.getData();
+    const basketCards = basketModel.getCards();
+    if (basketCards.length === 0) {
+        contactsForm.render({
+            valid: true
+        });
+        return;
+    }
 
-	api
-		.post('/order', {
-			...orderData,
-			total: basketModel.getPriceSum(),
-			items: basketModel.getCards().map((item) => item.id),
-		})
-		.then((result: any) => {
-			const successHTML = new ConfirmFormView(
-				cloneTemplate(confirmFormTemplate),
-				() => modal.closeModal()
-			).render({
-				total: result.total,
-			});
+    const orderData = {
+        payment: orderModel.payment,
+        address: orderModel.address,
+        email: orderModel.email,
+        phone: orderModel.phone,
+        total: basketModel.getPriceSum(),
+        items: basketCards.map(card => card.id)
+    };
+    
+    api.postOrder(orderData)
+        .then((result: any) => {
+            const successHTML = new ConfirmFormView(
+                cloneTemplate(confirmFormTemplate),
+                () => modal.closeModal()
+            ).render({
+                total: result.total,
+            });
 
-			modal.render({
-				content: successHTML,
-			});
+            modal.render({
+                content: successHTML,
+            });
 
-			basketModel.clear();
-			orderModel.clear();
-			paymentForm.togglePayment('card');
-		})
-		.catch((err) => {
-			console.error(err);
-		});
+            basketModel.clear();
+            orderModel.clear();
+            paymentForm.togglePayment('card');
+        })
+        .catch((err) => {
+            console.log(err);
+            contactsForm.render({
+                valid: true
+            });
+        });
 });
 // ОТКРЫТА МОДАЛКА БЛОКИРУЕМ СКРОЛЛ
 events.on('modal:open', () => {

@@ -8,13 +8,16 @@ export interface ICard {
 	category: string;
 	price: number | null;
 }
-
 export interface IOrder {
 	address: string;
-	email: string; 
-	phone: string; 
+	email: string;
+	phone: string;
 	payment: 'card' | 'cash' | '';
+	total: number;
+	items: string[];
 }
+
+export type TOrderFormData = Pick<IOrder, 'address' | 'email' | 'phone' | 'payment'>;
 
 export interface IOrderRes {
 	id: string;

@@ -1,4 +1,4 @@
-import { IOrder } from '../../types';
+import { IOrder, TOrderFormData } from '../../types';
 import { IEvents } from '../base/events';
 
 export type TPaymentOptions = 'card' | 'cash' | '';
@@ -8,20 +8,20 @@ export class OrderModel {
 	address: string = '';
 	phone: string = '';
 	email: string = '';
-	errors: Partial<Record<keyof IOrder, string>> = {};
+	errors: Partial<Record<keyof TOrderFormData, string>> = {};
 
-	constructor(protected events: IEvents) { }
+	constructor(protected events: IEvents) {}
 
-	setValue(field: keyof IOrder, value: string) {
+	setValue(field: keyof TOrderFormData, value: string) {
 		if (field === 'payment') {
 			this[field] = value as TPaymentOptions;
-			this.events.emit('payment:change', { value });
+			this.events.emit('payment:change', { value: value });
 		} else {
 			this[field] = value;
 		}
 	}
 
-	getData(): IOrder {
+	getData(): TOrderFormData {
 		return {
 			payment: this.payment,
 			address: this.address,
@@ -30,16 +30,24 @@ export class OrderModel {
 		};
 	}
 
+	getOrderData(total: number, cards: string[]): IOrder {
+		return {
+			payment: this.payment,
+			address: this.address,
+			phone: this.phone,
+			email: this.email,
+			total: total,
+			items: cards
+		};
+	}
 
 	private isValidEmail(email: string): boolean {
 		return email.includes('@') && email.length > 3;
 	}
 
-
 	private isValidPhone(phone: string): boolean {
 		return /^\d+$/.test(phone.replace(/\s/g, '')); // только цифры, пробелы игнорируем
 	}
-
 
 	validatePayment(): boolean {
 		this.errors = {};
@@ -53,7 +61,6 @@ export class OrderModel {
 
 		return Object.keys(this.errors).length === 0;
 	}
-
 
 	validateContacts(): boolean {
 		this.errors = {};

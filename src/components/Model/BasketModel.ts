@@ -23,9 +23,8 @@ export class BasketModel {
 	}
 
 	clear(): void {
-		this.cards.forEach((card) => {
-			this.deleteCard(card.id);
-		});
+		this.cards = [];
+		this.events.emit('basket:changed')
 	}
 
 	cardInBasket(id: string): boolean {
