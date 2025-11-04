@@ -1,7 +1,7 @@
-import { ICard } from '../../types';
+import { IBasketModel, ICard } from '../../types';
 import { IEvents } from '../base/events';
 
-export class BasketModel {
+export class BasketModel implements IBasketModel{
 	protected cards: ICard[] = [];
 
 	constructor(protected events: IEvents) {}

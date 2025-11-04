@@ -145,88 +145,79 @@ events.on('basket:open', () => {
 
 // ОТКРЫТИЕ ФОРМЫ ОПЛАТЫ
 events.on('order:open', () => {
-	// Проверяем, что в корзине есть товары
-	if (basketModel.getCardsSum() === 0) {
-		console.error('Корзина пуста, невозможно открыть форму заказа');
-		return;
-	}
-	const form = paymentForm.render({
-		address: '',
-		valid: false,
-		errorMessage: [],
-	});
-	modal.render({ content: form });
+    if (basketModel.getCardsSum() === 0) {
+        console.error('Корзина пуста, невозможно открыть форму заказа');
+        return;
+    }
+    
+    const form = paymentForm.render({
+        address: '',
+        valid: false,
+        errorMessage: [],
+    });
+    
+    modal.render({ content: form });
+    events.emit('validate:payment');
+});
+
+// СОБЫТИЕ ВАЛИДАЦИИ ФОРМЫ СПОСОБА ОПЛАТЫ
+events.on('validate:payment', () => {
+    const isValid = orderModel.validatePayment();
+    const errors = orderModel.errors;
+    paymentForm.render({
+        valid: isValid,
+        errorMessage: [errors.address, errors.payment].filter(Boolean),
+    });
 });
 
 // ОБРАБОТЧИКИ ФОРМЫ ОПЛАТЫ И ДОСТАВКИ
-
-// ИЗМЕНИЛСЯ АДРЕС
 events.on('order.address:change', (data: any) => {
-	orderModel.setValue('address', data.value);
-
-	const isValid = orderModel.validatePayment();
-	const errors = orderModel.errors;
-
-	paymentForm.render({
-		valid: isValid,
-		errorMessage: [errors.address, errors.payment].filter(Boolean),
-	});
+    orderModel.setValue('address', data.value);
+    events.emit('validate:payment');
 });
 
-// ИЗМЕНИЛСЯ СПОСОБ ОПЛАТЫ
 events.on('order.payment:change', (data: any) => {
-	orderModel.setValue('payment', data.value);
-	paymentForm.togglePayment(data.value);
-
-	const isValid = orderModel.validatePayment();
-	const errors = orderModel.errors;
-
-	paymentForm.render({
-		valid: isValid,
-		errorMessage: [errors.address, errors.payment].filter(Boolean),
-	});
+    orderModel.setValue('payment', data.value);
+    paymentForm.togglePayment(data.value);
+    events.emit('validate:payment');
 });
 
 // ОБРАБОТЧИКИ ФОРМЫ КОНТАКТОВ
-
-// ИЗМЕНИЛСЯ EMAIL
 events.on('contacts.email:change', (data: any) => {
-	orderModel.setValue('email', data.value);
-
-	const isValid = orderModel.validateContacts();
-	const errors = orderModel.errors;
-
-	contactsForm.render({
-		valid: isValid,
-		errorMessage: [errors.email, errors.phone].filter(Boolean),
-	});
+    orderModel.setValue('email', data.value);
+    events.emit('validate:contacts');
 });
 
-// ИЗМЕНИЛСЯ ТЕЛЕФОН
 events.on('contacts.phone:change', (data: any) => {
-	orderModel.setValue('phone', data.value);
+    orderModel.setValue('phone', data.value);
+    events.emit('validate:contacts');
+});
 
-	const isValid = orderModel.validateContacts();
-	const errors = orderModel.errors;
-
-	contactsForm.render({
-		valid: isValid,
-		errorMessage: [errors.email, errors.phone].filter(Boolean),
-	});
+// СОБЫТИЕ ВАЛИДАЦИИ ФОРМЫ КОНТАКТЫ
+events.on('validate:contacts', () => {
+    const isValid = orderModel.validateContacts();
+    const errors = orderModel.errors;
+    contactsForm.render({
+        valid: isValid,
+        errorMessage: [errors.email, errors.phone].filter(Boolean),
+    });
 });
 
 // ПОДТВЕРДИЛИ СПОСОБ ОПЛАТЫ И АДРЕС
 events.on('order:submit', () => {
-	const contactFormHTML = contactsForm.render({
-		email: orderModel.email || '',
-		phone: orderModel.phone || '',
-		valid: true,
-		errorMessage: [],
-	});
+    const isValidContacts = orderModel.validateContacts();
+    const errors = (orderModel).errors;
 
-	modal.render({
-		content: contactFormHTML,
-	});
+    const contactFormHTML = contactsForm.render({
+        email: orderModel.email || '',
+        phone: orderModel.phone || '',
+        valid: isValidContacts,
+        errorMessage: [errors.email, errors.phone].filter(Boolean),
+    });
+
+    modal.render({
+        content: contactFormHTML,
+    });
 });
 
 // ПОДТВЕРДИЛИ EMAIL и ТЕЛЕФОН

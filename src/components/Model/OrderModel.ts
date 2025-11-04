@@ -1,9 +1,9 @@
-import { IOrder, TOrderFormData } from '../../types';
+import { IOrder, IOrderModel, TOrderFormData } from '../../types';
 import { IEvents } from '../base/events';
 
 export type TPaymentOptions = 'card' | 'cash' | '';
 
-export class OrderModel {
+export class OrderModel implements IOrderModel{
 	payment: TPaymentOptions = '';
 	address: string = '';
 	phone: string = '';
@@ -27,17 +27,6 @@ export class OrderModel {
 			address: this.address,
 			phone: this.phone,
 			email: this.email,
-		};
-	}
-
-	getOrderData(total: number, cards: string[]): IOrder {
-		return {
-			payment: this.payment,
-			address: this.address,
-			phone: this.phone,
-			email: this.email,
-			total: total,
-			items: cards
 		};
 	}
 

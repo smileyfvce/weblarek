@@ -460,6 +460,10 @@ type TModalContacts = Pick<IOrder, 'email' | 'phone'>;
 
 `contacts:submit` - отправка формы контактов
 
+`validate:payment` - валидация формы способа оплаты
+
+`validate:contacts` - валидация формы контактов
+
 #### Модальные окна:
 
 `modal:open` - открытие модалки

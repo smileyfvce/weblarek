@@ -1,7 +1,7 @@
-import { ICard } from '../../types';
+import { ICard, ICardsModel } from '../../types';
 import { IEvents } from '../base/events';
 
-export class CardsModel {
+export class CardsModel implements ICardsModel {
 	protected cards: ICard[] = [];
 	protected preview: ICard;
 
